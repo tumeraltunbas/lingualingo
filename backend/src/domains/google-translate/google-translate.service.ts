@@ -10,6 +10,7 @@ import {
 } from '../../models/dto/res/google-translate';
 import { Context } from '../../models/entities/request';
 import { LanguageResult } from '@google-cloud/translate/build/src/v2';
+import { Translation } from '../../models/entities/google-translate';
 
 @Injectable()
 export class GoogleTranslateService {
@@ -50,15 +51,15 @@ export class GoogleTranslateService {
         translateTextReqDto: TranslateTextReqDto,
         context: Context,
     ): Promise<TranslateTextResDto> {
-        const { text, targetLanguage } = translateTextReqDto;
+        const { text, targetLanguages } = translateTextReqDto;
 
-        let translatedText: string = null;
+        let translatedTexts: Translation[] = null;
 
         try {
-            translatedText =
+            translatedTexts =
                 await this.googleTranslateRequestClient.translateText(
                     text,
-                    targetLanguage,
+                    targetLanguages,
                     context,
                 );
         } catch (error) {
@@ -70,7 +71,7 @@ export class GoogleTranslateService {
         }
 
         const translateTextResDto: TranslateTextResDto = {
-            translatedText,
+            translations: translatedTexts,
         };
 
         return translateTextResDto;

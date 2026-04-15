@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as deepl from 'deepl-node';
 import { Context } from '../../models/entities/request';
+import { Translation } from '../../models/entities/deepl';
 
 @Injectable()
 export class DeeplRequestClient {
@@ -14,17 +15,24 @@ export class DeeplRequestClient {
 
     async translateText(
         text: string,
-        targetLanguage: string,
+        targetLanguages: string[],
         context: Context,
-    ): Promise<string> {
+    ): Promise<Translation[]> {
         const deeplClient = new deepl.DeepLClient(context.apiKey);
 
-        const result = await deeplClient.translateText(
-            text,
-            null,
-            targetLanguage as deepl.TargetLanguageCode,
+        const translationPromises = targetLanguages.map((targetLanguage) =>
+            deeplClient.translateText(
+                text,
+                null,
+                targetLanguage as deepl.TargetLanguageCode,
+            ),
         );
 
-        return result.text;
+        const results = await Promise.all(translationPromises);
+
+        return results.map((result, index) => ({
+            code: targetLanguages[index],
+            translatedText: result.text,
+        }));
     }
 }

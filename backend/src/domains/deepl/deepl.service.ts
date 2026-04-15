@@ -10,6 +10,7 @@ import {
 } from '../../models/dto/res/deepl';
 import * as deepl from 'deepl-node';
 import { Context } from '../../models/entities/request';
+import { Translation } from '../../models/entities/deepl';
 
 @Injectable()
 export class DeeplService {
@@ -48,14 +49,14 @@ export class DeeplService {
         translateTextReqDto: TranslateTextReqDto,
         context: Context,
     ): Promise<TranslateTextResDto> {
-        const { text, targetLanguage } = translateTextReqDto;
+        const { text, targetLanguages } = translateTextReqDto;
 
-        let translatedText: string = null;
+        let translatedTexts: Translation[] = null;
 
         try {
-            translatedText = await this.deeplRequestClient.translateText(
+            translatedTexts = await this.deeplRequestClient.translateText(
                 text,
-                targetLanguage,
+                targetLanguages,
                 context,
             );
         } catch (error) {
@@ -66,7 +67,7 @@ export class DeeplService {
         }
 
         const translateTextResDto: TranslateTextResDto = {
-            translatedText,
+            translations: translatedTexts,
         };
 
         return translateTextResDto;

@@ -4,6 +4,7 @@ import {
     Translate,
 } from '@google-cloud/translate/build/src/v2/index';
 import { Context } from '../../models/entities/request';
+import { Translation } from '../../models/entities/google-translate';
 
 @Injectable()
 export class GoogleTranslateRequestClient {
@@ -16,16 +17,21 @@ export class GoogleTranslateRequestClient {
 
     async translateText(
         text: string,
-        targetLanguageCode: string,
+        targetLanguageCodes: string[],
         context: Context,
-    ): Promise<string> {
+    ): Promise<Translation[]> {
         const translateClient = new Translate({ key: context.apiKey });
 
-        const [translations] = await translateClient.translate(
-            text,
-            targetLanguageCode,
+        const translationPromises = targetLanguageCodes.map(
+            (targetLanguageCode) =>
+                translateClient.translate(text, targetLanguageCode),
         );
 
-        return translations;
+        const results = await Promise.all(translationPromises);
+
+        return results.map((result, index) => ({
+            code: targetLanguageCodes[index],
+            translatedText: result[0],
+        }));
     }
 }

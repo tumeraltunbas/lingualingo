@@ -1,11 +1,11 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsArray } from 'class-validator';
 
 export class TranslateTextReqDto {
     @IsString()
     @IsNotEmpty()
     text: string;
 
-    @IsString()
+    @IsArray()
     @IsNotEmpty()
-    targetLanguage: string;
+    targetLanguages: string[];
 }

@@ -1,4 +1,9 @@
 export class TranslateTextResDto {
+    translations: TranslationRes[];
+}
+
+export class TranslationRes {
+    code: string;
     translatedText: string;
 }
 
