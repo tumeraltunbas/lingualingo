@@ -2,7 +2,6 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Response, NextFunction } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { CONFIGURATION_KEYS } from '../constants/configuration';
-import { Logger } from '../infrastructure/logger/logger.service';
 import { BusinessRuleError } from '../infrastructure/error/error';
 import { ERROR_CODES } from '../constants/error';
 import { ROUTE_PATHS } from '../constants/routes';
@@ -14,10 +13,7 @@ export class CheckApiKeyMiddleware implements NestMiddleware {
     private apiKeyHeader: string;
     private apiProviderHeader: string;
 
-    constructor(
-        private configService: ConfigService,
-        private logger: Logger,
-    ) {
+    constructor(private configService: ConfigService) {
         this.apiKeyHeader = this.configService.get<string>(
             CONFIGURATION_KEYS.api.headers.apiKeyHeader,
         );
@@ -49,8 +45,15 @@ export class CheckApiKeyMiddleware implements NestMiddleware {
         const requestPath = req.url.toLowerCase();
 
         const isDeeplRequest = requestPath.includes(ROUTE_PATHS.DEEPL.BASE);
+        const isGoogleTranslateRequest = requestPath.includes(
+            ROUTE_PATHS.GOOGLE_TRANSLATE.BASE,
+        );
 
         if (isDeeplRequest && apiProvider !== ApiProviders.DEEPL) {
+            throw new BusinessRuleError(ERROR_CODES.apiProviderMismatch);
+        }
+
+        if (isGoogleTranslateRequest && apiProvider !== ApiProviders.GOOGLE) {
             throw new BusinessRuleError(ERROR_CODES.apiProviderMismatch);
         }
 

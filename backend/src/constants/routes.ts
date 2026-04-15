@@ -4,4 +4,9 @@ export const ROUTE_PATHS = {
         LANGUAGES: 'languages',
         TRANSLATE: 'translate',
     },
+    GOOGLE_TRANSLATE: {
+        BASE: 'google',
+        LANGUAGES: 'languages',
+        TRANSLATE: 'translate',
+    },
 };

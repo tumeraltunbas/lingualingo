@@ -1,34 +1,36 @@
 import { Injectable } from '@nestjs/common';
-import { DeeplRequestClient } from './deepl.request-client';
+import { GoogleTranslateRequestClient } from './google-translate.request-client';
 import { Logger } from '../../infrastructure/logger/logger.service';
-import { TranslateTextReqDto } from '../../models/dto/req/deepl';
+import { TranslateTextReqDto } from '../../models/dto/req/google-translate';
 import { ProcessFailureError } from '../../infrastructure/error/error';
 
 import {
     GetSupportedLanguagesResDto,
     TranslateTextResDto,
-} from '../../models/dto/res/deepl';
-import * as deepl from 'deepl-node';
+} from '../../models/dto/res/google-translate';
 import { Context } from '../../models/entities/request';
+import { LanguageResult } from '@google-cloud/translate/build/src/v2';
 
 @Injectable()
-export class DeeplService {
+export class GoogleTranslateService {
     constructor(
-        private deeplRequestClient: DeeplRequestClient,
+        private googleTranslateRequestClient: GoogleTranslateRequestClient,
         private logger: Logger,
     ) {}
 
     async getSupportedLanguages(
         context: Context,
     ): Promise<GetSupportedLanguagesResDto> {
-        let languages: readonly deepl.Language[] = null;
+        let languages: LanguageResult[] = null;
 
         try {
             languages =
-                await this.deeplRequestClient.getSupportedLanguages(context);
+                await this.googleTranslateRequestClient.getSupportedLanguages(
+                    context,
+                );
         } catch (error) {
             this.logger.error(
-                'DeepL Service - getSupportedLanguages - getSupportedLanguages',
+                'Google Translate Service - getSupportedLanguages - getSupportedLanguages',
                 { error },
             );
             throw new ProcessFailureError(error);
@@ -53,15 +55,17 @@ export class DeeplService {
         let translatedText: string = null;
 
         try {
-            translatedText = await this.deeplRequestClient.translateText(
-                text,
-                targetLanguage,
-                context,
-            );
+            translatedText =
+                await this.googleTranslateRequestClient.translateText(
+                    text,
+                    targetLanguage,
+                    context,
+                );
         } catch (error) {
-            this.logger.error('DeepL Service - translateText - translateText', {
-                error,
-            });
+            this.logger.error(
+                'Google Translate Service - translateText - translateText',
+                { error },
+            );
             throw new ProcessFailureError(error);
         }
 
