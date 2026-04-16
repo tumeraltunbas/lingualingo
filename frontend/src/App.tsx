@@ -1,120 +1,113 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useCallback, useMemo, useState } from 'react'
+import { ApiKeyBanner } from '@/components/ApiKeyBanner'
+import { EmptyResults } from '@/components/EmptyResults'
+import { SettingsDrawer } from '@/components/SettingsDrawer'
+import { SourceEditor } from '@/components/SourceEditor'
+import { TargetLanguagePicker } from '@/components/TargetLanguagePicker'
+import { TopBar } from '@/components/TopBar'
+import { TranslationGrid } from '@/components/TranslationGrid'
+import { MESSAGES } from '@/constants/messages'
+import { useLanguageLabels } from '@/hooks/useLanguageLabels'
+import { useTranslator } from '@/hooks/useTranslator'
+import { useSettings } from '@/providers/SettingsProvider'
+import {
+  TRANSLATION_STATUS,
+  type TranslationGridItem,
+} from '@/types/translation'
+
+interface TranslateGuard {
+  canTranslate: boolean
+  disabledReason?: string
+}
+
+function computeTranslateGuard(
+  apiKey: string | null,
+  sourceText: string,
+  targetLanguages: string[],
+): TranslateGuard {
+  if (!apiKey) return { canTranslate: false, disabledReason: MESSAGES.apiKeyRequired }
+  if (!sourceText.trim())
+    return { canTranslate: false, disabledReason: MESSAGES.sourceTextRequired }
+  if (targetLanguages.length === 0)
+    return {
+      canTranslate: false,
+      disabledReason: MESSAGES.targetLanguageRequired,
+    }
+  return { canTranslate: true }
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const {
+    provider,
+    apiKey,
+    targetLanguages,
+    toggleTargetLanguage,
+    setTargetLanguages,
+  } = useSettings()
+
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [sourceText, setSourceText] = useState('')
+
+  const openSettings = useCallback(() => setSettingsOpen(true), [])
+
+  const { getLabelForCode } = useLanguageLabels(provider)
+
+  const { translating, results, lastTranslated, runTranslate, retry } =
+    useTranslator({ provider, apiKey, onMissingApiKey: openSettings })
+
+  const { canTranslate, disabledReason } = useMemo(
+    () => computeTranslateGuard(apiKey, sourceText, targetLanguages),
+    [apiKey, sourceText, targetLanguages],
+  )
+
+  const handleTranslate = useCallback(() => {
+    void runTranslate(sourceText.trim(), targetLanguages)
+  }, [runTranslate, sourceText, targetLanguages])
+
+  const gridItems = useMemo<TranslationGridItem[]>(() => {
+    const codes = lastTranslated?.codes ?? []
+    return codes.map((code) => ({
+      code,
+      name: getLabelForCode(code),
+      state: results[code] ?? { status: TRANSLATION_STATUS.LOADING },
+    }))
+  }, [lastTranslated, results, getLabelForCode])
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="min-h-svh bg-background text-foreground">
+      <TopBar onOpenSettings={openSettings} />
 
-      <div className="ticks"></div>
+      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6">
+        {!apiKey && <ApiKeyBanner onOpenSettings={openSettings} />}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <SourceEditor
+          value={sourceText}
+          onChange={setSourceText}
+          onTranslate={handleTranslate}
+          canTranslate={canTranslate}
+          translating={translating}
+          disabledReason={disabledReason}
+        />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <TargetLanguagePicker
+          provider={provider}
+          apiKey={apiKey}
+          selected={targetLanguages}
+          onToggle={toggleTargetLanguage}
+          onClear={() => setTargetLanguages([])}
+          onOpenSettings={openSettings}
+          getLabelForCode={getLabelForCode}
+        />
+
+        {gridItems.length > 0 ? (
+          <TranslationGrid items={gridItems} onRetry={retry} />
+        ) : (
+          <EmptyResults />
+        )}
+      </main>
+
+      <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
+    </div>
   )
 }
 
