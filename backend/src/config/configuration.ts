@@ -3,13 +3,12 @@ export default (): Config => ({
         port: parseInt(process.env.PORT) || 8080,
     },
     path: {
-        webBaseUrl: process.env.WEB_BASE_URL,
+        webBaseUrl: process.env.WEB_BASE_URL || 'http://localhost:5173',
     },
     api: {
         headers: {
-            apiKeyHeader: process.env.API_KEY_HEADER || 'x-api-key',
-            apiProviderHeader:
-                process.env.API_PROVIDER_HEADER || 'x-api-provider',
+            apiKeyHeader: 'x-api-key',
+            apiProviderHeader: 'x-api-provider',
         },
     },
 });
