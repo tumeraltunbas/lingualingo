@@ -37,7 +37,7 @@ lingualingo/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/lingualingo.git
+git clone https://github.com/tumeraltunbas/lingualingo.git
 cd lingualingo
 ```
 
